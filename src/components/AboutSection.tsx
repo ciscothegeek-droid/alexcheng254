@@ -1,4 +1,24 @@
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
+import aboutResearch from "@/assets/about-research.jpg";
+import aboutFieldwork from "@/assets/about-fieldwork.jpg";
+import aboutOffice from "@/assets/about-office.jpg";
+import aboutTraining from "@/assets/about-training.jpg";
+import aboutNairobi from "@/assets/about-nairobi.jpg";
+
+const carouselImages = [
+  { src: aboutResearch, alt: "Market research data analysis for Africa" },
+  { src: aboutFieldwork, alt: "Field research team in Africa" },
+  { src: aboutOffice, alt: "Nairobi office meeting" },
+  { src: aboutTraining, alt: "Research methodology training" },
+  { src: aboutNairobi, alt: "Nairobi city skyline" },
+];
+
 const AboutSection = () => {
+  const [emblaRef] = useEmblaCarousel({ loop: true }, [
+    Autoplay({ delay: 5000, stopOnInteraction: false }),
+  ]);
+
   return (
     <section className="py-12 md:py-16">
       <div className="container mx-auto max-w-4xl px-6">
@@ -17,6 +37,21 @@ const AboutSection = () => {
           We have put together a team of young, dynamic professionals, who are committed to
           delivering high quality results.
         </p>
+
+        {/* Image carousel */}
+        <div className="mb-8 overflow-hidden rounded" ref={emblaRef}>
+          <div className="flex">
+            {carouselImages.map((img, i) => (
+              <div key={i} className="flex-[0_0_100%] min-w-0">
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  className="w-full h-64 md:h-96 object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
 
         <p className="text-base leading-relaxed text-foreground mb-4">
           Capacity building is an ongoing process, to which we are thoroughly committed. In addition
