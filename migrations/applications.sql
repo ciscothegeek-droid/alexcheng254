@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS public.applications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  job_listing_id text NOT NULL,
+  job_title text NOT NULL,
+  first_name text NOT NULL,
+  last_name text NOT NULL,
+  email text NOT NULL,
+  phone text NOT NULL,
+  id_number text NOT NULL,
+  gender text,
+  date_of_birth date,
+  country text NOT NULL,
+  county text,
+  constituency text,
+  ward text,
+  education text,
+  experience text,
+  cover_letter text,
+  status text NOT NULL DEFAULT 'pending',
+  admin_feedback text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
