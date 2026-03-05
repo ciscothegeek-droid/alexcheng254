@@ -21,7 +21,7 @@ const blogPosts = [
     image: blogUganda,
     title: "Performing Quantitative Field Work in Uganda",
     excerpt:
-      "Greetings from Uganda — also known as the "Pearl of Africa". As one of the top destinations in the East …",
+      'Greetings from Uganda — also known as the "Pearl of Africa". As one of the top destinations in the East …',
   },
   {
     image: blogWebinar,
