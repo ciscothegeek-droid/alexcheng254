@@ -42,7 +42,7 @@ const contactLinks = [
 
 const SiteFooter = () => {
   return (
-    <footer className="bg-primary pt-12 pb-8">
+    <footer className="bg-black pt-12 pb-8">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
           {/* Company */}
