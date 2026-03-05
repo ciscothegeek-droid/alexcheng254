@@ -4,7 +4,6 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CheckCircle, Upload, Lock, PartyPopper, Calendar, Link2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -75,7 +74,8 @@ const InvitationPage = () => {
 
   const loadInvitation = async () => {
     try {
-      const { data: inv, error: invErr } = await supabase
+      // Use .from() with type assertion since these tables aren't in generated types yet
+      const { data: inv, error: invErr } = await (supabase as any)
         .from("invitation_tokens")
         .select("*")
         .eq("token", token)
@@ -87,23 +87,21 @@ const InvitationPage = () => {
         return;
       }
 
-      // Check expiry
       if (new Date(inv.expires_at) < new Date()) {
         setError("This invitation has expired. Please contact the administrator.");
         setLoading(false);
         return;
       }
 
-      setInvitation(inv as unknown as InvitationData);
+      setInvitation(inv as InvitationData);
 
-      // Load application details
-      const { data: app } = await supabase
+      const { data: app } = await (supabase as any)
         .from("applications")
         .select("first_name, last_name, email, phone, job_title, admin_feedback")
         .eq("id", inv.application_id)
         .single();
 
-      if (app) setApplication(app as unknown as ApplicationData);
+      if (app) setApplication(app as ApplicationData);
     } catch {
       setError("Failed to load invitation.");
     }
@@ -131,8 +129,6 @@ const InvitationPage = () => {
 
       setMerchantRef(data.merchant_reference);
       setPollingPayment(true);
-
-      // Open Pesapal payment page
       window.open(data.redirect_url, "_blank");
       toast({
         title: "Payment Initiated",
@@ -164,8 +160,7 @@ const InvitationPage = () => {
       const { error: uploadErr } = await supabase.storage.from("cv-uploads").upload(filePath, file);
       if (uploadErr) throw uploadErr;
 
-      // Mark CV as uploaded
-      await supabase
+      await (supabase as any)
         .from("invitation_tokens")
         .update({ cv_uploaded: true })
         .eq("id", invitation.id);
@@ -233,16 +228,16 @@ const InvitationPage = () => {
             <ol className="list-decimal list-inside space-y-3 text-sm text-muted-foreground">
               <li><strong className="text-foreground">Pay the registration fee</strong> — A one-time fee of <strong>KSH 92</strong> is required to proceed. This covers administrative and platform costs.</li>
               <li><strong className="text-foreground">Upload your CV</strong> — After payment, upload your latest CV/Resume in PDF or Word format.</li>
-              <li><strong className="text-foreground">Access the webinar/interview link</strong> — Once payment is confirmed and your CV is uploaded, the webinar/interview link and details will appear below. You will also receive an email with the link.</li>
-              <li><strong className="text-foreground">Attend the session</strong> — Join the webinar/interview on the stated date and time. Be prepared and professional.</li>
+              <li><strong className="text-foreground">Access the webinar/interview link</strong> — Once payment is confirmed and your CV is uploaded, the webinar/interview link and details will appear below.</li>
+              <li><strong className="text-foreground">Attend the session</strong> — Join the webinar/interview on the stated date and time.</li>
             </ol>
           </div>
 
           {/* Step 1: Payment */}
-          <div className={`bg-card border rounded-lg p-6 mb-6 ${invitation?.payment_completed ? "border-green-300 bg-green-50/30" : "border-border"}`}>
+          <div className={`bg-card border rounded-lg p-6 mb-6 ${invitation?.payment_completed ? "border-primary/40" : "border-border"}`}>
             <div className="flex items-center gap-3 mb-4">
               {invitation?.payment_completed ? (
-                <CheckCircle className="w-6 h-6 text-green-600" />
+                <CheckCircle className="w-6 h-6 text-primary" />
               ) : (
                 <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</span>
               )}
@@ -251,11 +246,11 @@ const InvitationPage = () => {
               </h3>
             </div>
             {invitation?.payment_completed ? (
-              <p className="text-sm text-green-700 font-semibold">✅ Payment confirmed. Thank you!</p>
+              <p className="text-sm text-primary font-semibold">✅ Payment confirmed. Thank you!</p>
             ) : (
               <div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Pay via M-Pesa, Airtel Money, card, or any method supported by Pesapal. Click the button below to proceed to the secure payment page.
+                  Pay via M-Pesa, Airtel Money, card, or any method supported by Pesapal.
                 </p>
                 {pollingPayment && (
                   <div className="flex items-center gap-2 mb-4 text-sm text-primary">
@@ -271,30 +266,24 @@ const InvitationPage = () => {
           </div>
 
           {/* Step 2: CV Upload */}
-          <div className={`bg-card border rounded-lg p-6 mb-6 ${!invitation?.payment_completed ? "opacity-50 pointer-events-none" : invitation?.cv_uploaded ? "border-green-300 bg-green-50/30" : "border-border"}`}>
+          <div className={`bg-card border rounded-lg p-6 mb-6 ${!invitation?.payment_completed ? "opacity-50 pointer-events-none" : invitation?.cv_uploaded ? "border-primary/40" : "border-border"}`}>
             <div className="flex items-center gap-3 mb-4">
               {invitation?.cv_uploaded ? (
-                <CheckCircle className="w-6 h-6 text-green-600" />
+                <CheckCircle className="w-6 h-6 text-primary" />
               ) : (
                 <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">2</span>
               )}
               <h3 className="text-lg font-heading font-bold text-foreground">Upload Your CV</h3>
             </div>
             {invitation?.cv_uploaded ? (
-              <p className="text-sm text-green-700 font-semibold">✅ CV uploaded successfully.</p>
+              <p className="text-sm text-primary font-semibold">✅ CV uploaded successfully.</p>
             ) : (
               <div>
                 <p className="text-sm text-muted-foreground mb-4">
                   Upload your latest CV/Resume. Accepted formats: PDF, DOC, DOCX. Maximum size: 10MB.
                 </p>
                 <label className="inline-flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleCVUpload}
-                    className="hidden"
-                    disabled={uploadingCV}
-                  />
+                  <input type="file" accept=".pdf,.doc,.docx" onChange={handleCVUpload} className="hidden" disabled={uploadingCV} />
                   <Button variant="outline" asChild>
                     <span>
                       {uploadingCV ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</> : <><Upload className="w-4 h-4" /> Choose File</>}
@@ -306,10 +295,10 @@ const InvitationPage = () => {
           </div>
 
           {/* Step 3: Webinar Link */}
-          <div className={`bg-card border rounded-lg p-6 ${!(invitation?.payment_completed && invitation?.cv_uploaded) ? "opacity-50 pointer-events-none" : "border-green-300 bg-green-50/30"}`}>
+          <div className={`bg-card border rounded-lg p-6 ${!(invitation?.payment_completed && invitation?.cv_uploaded) ? "opacity-50 pointer-events-none" : "border-primary/40"}`}>
             <div className="flex items-center gap-3 mb-4">
               {invitation?.payment_completed && invitation?.cv_uploaded ? (
-                <CheckCircle className="w-6 h-6 text-green-600" />
+                <CheckCircle className="w-6 h-6 text-primary" />
               ) : (
                 <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">3</span>
               )}
@@ -338,7 +327,7 @@ const InvitationPage = () => {
                   </a>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">
-                    The webinar/interview link will be shared with you via email at <strong>{application?.email}</strong>. Please check your inbox.
+                    The webinar/interview link will be shared via email at <strong>{application?.email}</strong>. Please check your inbox.
                   </p>
                 )}
               </div>
