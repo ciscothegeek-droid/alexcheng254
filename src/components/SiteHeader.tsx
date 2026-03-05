@@ -96,21 +96,11 @@ const SiteHeader = () => {
         />
         <div className="absolute inset-0 flex items-center px-6 md:px-12">
           <Link to="/" className="flex items-center gap-3">
-            <div className="relative w-16 h-16 md:w-20 md:h-20">
-              <div className="absolute inset-0 rounded-full border-[3px] border-primary" />
-              <div
-                className="absolute top-0 right-0 w-1/2 h-1/2 rounded-tr-full border-t-[3px] border-r-[3px]"
-                style={{ borderColor: "hsl(0, 75%, 45%)" }}
-              />
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-primary-foreground text-lg md:text-xl font-heading font-bold tracking-wide">
-                Inf<span className="text-accent">i</span>nite
-              </span>
-              <span className="text-primary-foreground text-lg md:text-xl font-heading font-bold tracking-wide ml-4">
-                <span className="text-accent">I</span>nsight
-              </span>
-            </div>
+            <img
+              src={logo}
+              alt="Infinite Insight Logo"
+              className="w-16 h-16 md:w-20 md:h-20 object-contain"
+            />
           </Link>
         </div>
       </div>
