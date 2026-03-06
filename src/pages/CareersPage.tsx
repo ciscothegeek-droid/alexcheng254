@@ -1,11 +1,20 @@
+import { useState, useEffect } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { Link } from "react-router-dom";
-import { getJobListings } from "@/lib/careersData";
-import { MapPin, Clock, Briefcase, Calendar } from "lucide-react";
+import { getJobListings, type JobListing } from "@/lib/careersData";
+import { MapPin, Clock, Briefcase, Calendar, Loader2 } from "lucide-react";
 
 const CareersPage = () => {
-  const jobs = getJobListings();
+  const [jobs, setJobs] = useState<JobListing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getJobListings().then((data) => {
+      setJobs(data);
+      setLoading(false);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,7 +45,11 @@ const CareersPage = () => {
           <div className="border-t border-border pt-8">
             <h2 className="text-xl font-heading font-bold text-accent mb-6">Current Job Openings:</h2>
 
-            {jobs.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-5 h-5 animate-spin" /> Loading...
+              </div>
+            ) : jobs.length === 0 ? (
               <p className="text-muted-foreground">No vacancies currently</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

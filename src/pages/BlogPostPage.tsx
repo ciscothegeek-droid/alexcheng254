@@ -1,12 +1,51 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { blogPosts } from "./BlogPage";
-import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Loader2 } from "lucide-react";
+
+interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  image_url: string | null;
+  date: string;
+  excerpt: string;
+  content: string;
+}
 
 const BlogPostPage = () => {
   const { slug } = useParams();
-  const post = blogPosts.find((p) => p.slug === slug);
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (slug) {
+      (supabase as any)
+        .from("blog_posts")
+        .select("*")
+        .eq("slug", slug)
+        .eq("published", true)
+        .single()
+        .then(({ data, error }: any) => {
+          if (!error && data) setPost(data);
+          setLoading(false);
+        });
+    }
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="py-16 text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -34,15 +73,13 @@ const BlogPostPage = () => {
           </Link>
           <span className="block text-xs text-muted-foreground font-body mb-2">{post.date}</span>
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-6">{post.title}</h1>
-          <img src={post.image} alt={post.title} className="w-full h-64 md:h-80 object-cover rounded mb-8" />
+          {post.image_url && (
+            <img src={post.image_url} alt={post.title} className="w-full h-64 md:h-80 object-cover rounded mb-8" />
+          )}
           <div className="prose max-w-none">
-            <p className="text-base leading-relaxed text-foreground">{post.excerpt}</p>
-            <p className="text-base leading-relaxed text-foreground mt-4">
-              This is a detailed article covering our experiences and insights from this project. Our team of dedicated researchers worked closely with local communities to gather authentic data and deliver actionable insights to our clients.
-            </p>
-            <p className="text-base leading-relaxed text-foreground mt-4">
-              At Infinite Insight, we believe in combining rigorous methodology with deep local understanding. This approach has helped us successfully deliver projects across 30 African markets since our founding in 2010.
-            </p>
+            {post.content?.split('\n\n').map((paragraph, i) => (
+              <p key={i} className="text-base leading-relaxed text-foreground mt-4 first:mt-0">{paragraph}</p>
+            ))}
           </div>
         </div>
       </main>
