@@ -3,18 +3,15 @@ import AboutSection from "@/components/AboutSection";
 import HelpSection from "@/components/HelpSection";
 import BlogSection from "@/components/BlogSection";
 import SiteFooter from "@/components/SiteFooter";
+import PageLayout from "@/components/PageLayout";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main>
-        <AboutSection />
-        <HelpSection />
-        <BlogSection />
-      </main>
-      <SiteFooter />
-    </div>
+    <PageLayout>
+      <AboutSection />
+      <HelpSection />
+      <BlogSection />
+    </PageLayout>
   );
 };
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import PageLayout from "@/components/PageLayout";
 import { getJobById, type JobListing } from "@/lib/careersData";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Calendar, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
@@ -38,10 +37,7 @@ const CareerApplyPage = () => {
 
   useEffect(() => {
     if (id) {
-      getJobById(id).then((data) => {
-        setJob(data);
-        setLoading(false);
-      });
+      getJobById(id).then((data) => { setJob(data); setLoading(false); });
     }
   }, [id]);
 
@@ -49,48 +45,38 @@ const CareerApplyPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <SiteHeader />
-        <main className="py-16 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-        </main>
-        <SiteFooter />
-      </div>
+      <PageLayout>
+        <div className="py-16 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" /></div>
+      </PageLayout>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-background">
-        <SiteHeader />
-        <main className="py-16 text-center">
+      <PageLayout>
+        <div className="py-16 text-center">
           <p className="text-muted-foreground mb-4">Job listing not found.</p>
           <Link to="/careers" className="text-primary hover:underline">← Back to Careers</Link>
-        </main>
-        <SiteFooter />
-      </div>
+        </div>
+      </PageLayout>
     );
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background">
-        <SiteHeader />
-        <main className="py-16">
+      <PageLayout>
+        <div className="py-16">
           <div className="container mx-auto max-w-2xl px-6 text-center">
             <CheckCircle className="w-16 h-16 text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-heading font-bold text-foreground mb-3">Application Submitted!</h1>
             <p className="text-muted-foreground mb-6">
               Thank you for applying for <strong>{job.title}</strong>. We will review your application and get back to you via the email you provided.
             </p>
-            <p className="text-sm text-muted-foreground mb-6">
-              If selected, you will receive an invitation email with further instructions for the interview/webinar.
-            </p>
+            <p className="text-sm text-muted-foreground mb-6">If selected, you will receive an invitation email with further instructions for the interview/webinar.</p>
             <Link to="/careers" className="text-primary hover:underline font-semibold">← Back to Careers</Link>
           </div>
-        </main>
-        <SiteFooter />
-      </div>
+        </div>
+      </PageLayout>
     );
   }
 
@@ -99,22 +85,11 @@ const CareerApplyPage = () => {
     setSubmitting(true);
     try {
       const { error } = await (supabase as any).from("applications").insert({
-        job_listing_id: id,
-        job_title: job.title,
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email,
-        phone: form.phone,
-        id_number: form.idNumber,
-        gender: form.gender || null,
-        date_of_birth: form.dateOfBirth || null,
-        country: form.country,
-        county: form.county || null,
-        constituency: form.constituency || null,
-        ward: form.ward || null,
-        education: form.education || null,
-        experience: form.experience || null,
-        cover_letter: form.coverLetter || null,
+        job_listing_id: id, job_title: job.title, first_name: form.firstName, last_name: form.lastName,
+        email: form.email, phone: form.phone, id_number: form.idNumber, gender: form.gender || null,
+        date_of_birth: form.dateOfBirth || null, country: form.country, county: form.county || null,
+        constituency: form.constituency || null, ward: form.ward || null, education: form.education || null,
+        experience: form.experience || null, cover_letter: form.coverLetter || null,
       });
       if (error) throw error;
       setSubmitted(true);
@@ -125,15 +100,10 @@ const CareerApplyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="py-12 md:py-16">
+    <PageLayout>
+      <div className="py-12 md:py-16">
         <div className="container mx-auto max-w-4xl px-6">
-          <Link to="/careers" className="inline-flex items-center gap-1 text-sm text-primary hover:underline mb-6">
-            <ArrowLeft className="w-4 h-4" /> Back to Careers
-          </Link>
-
-          {/* Job Details */}
+          <Link to="/careers" className="inline-flex items-center gap-1 text-sm text-primary hover:underline mb-6"><ArrowLeft className="w-4 h-4" /> Back to Careers</Link>
           <div className="bg-card border border-border rounded-lg p-6 mb-8">
             <div className="flex items-start justify-between flex-wrap gap-2 mb-3">
               <span className="text-xs font-semibold px-2 py-1 rounded bg-primary/10 text-primary">{job.category}</span>
@@ -150,115 +120,44 @@ const CareerApplyPage = () => {
               {job.requirements.map((r, i) => <li key={i}>{r}</li>)}
             </ul>
           </div>
-
-          {/* Application Form */}
           <h2 className="text-xl font-heading font-bold text-foreground mb-6">Application Form</h2>
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Personal Info */}
             <div className="bg-card border border-border rounded-lg p-6">
               <h3 className="text-base font-bold text-foreground mb-4">Personal Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">First Name *</label>
-                  <Input required value={form.firstName} onChange={(e) => update("firstName", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Last Name *</label>
-                  <Input required value={form.lastName} onChange={(e) => update("lastName", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Email Address *</label>
-                  <Input type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Phone Number *</label>
-                  <Input type="tel" required value={form.phone} onChange={(e) => update("phone", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">ID / Passport Number *</label>
-                  <Input required value={form.idNumber} onChange={(e) => update("idNumber", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Gender</label>
-                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.gender} onChange={(e) => update("gender", e.target.value)}>
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Date of Birth</label>
-                  <Input type="date" value={form.dateOfBirth} onChange={(e) => update("dateOfBirth", e.target.value)} />
-                </div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">First Name *</label><Input required value={form.firstName} onChange={(e) => update("firstName", e.target.value)} /></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Last Name *</label><Input required value={form.lastName} onChange={(e) => update("lastName", e.target.value)} /></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Email Address *</label><Input type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} /></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Phone Number *</label><Input type="tel" required value={form.phone} onChange={(e) => update("phone", e.target.value)} /></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">ID / Passport Number *</label><Input required value={form.idNumber} onChange={(e) => update("idNumber", e.target.value)} /></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Gender</label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.gender} onChange={(e) => update("gender", e.target.value)}><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Date of Birth</label><Input type="date" value={form.dateOfBirth} onChange={(e) => update("dateOfBirth", e.target.value)} /></div>
               </div>
             </div>
-
-            {/* Regional Info */}
             <div className="bg-card border border-border rounded-lg p-6">
               <h3 className="text-base font-bold text-foreground mb-4">Region</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Country *</label>
-                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required value={form.country} onChange={(e) => update("country", e.target.value)}>
-                    <option value="">Select Country</option>
-                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">County</label>
-                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.county} onChange={(e) => update("county", e.target.value)}>
-                    <option value="">Select County</option>
-                    {kenyanCounties.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Constituency</label>
-                  <Input placeholder="Enter constituency" value={form.constituency} onChange={(e) => update("constituency", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Ward</label>
-                  <Input placeholder="Enter ward" value={form.ward} onChange={(e) => update("ward", e.target.value)} />
-                </div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Country *</label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required value={form.country} onChange={(e) => update("country", e.target.value)}><option value="">Select Country</option>{countries.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">County</label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.county} onChange={(e) => update("county", e.target.value)}><option value="">Select County</option>{kenyanCounties.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Constituency</label><Input placeholder="Enter constituency" value={form.constituency} onChange={(e) => update("constituency", e.target.value)} /></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Ward</label><Input placeholder="Enter ward" value={form.ward} onChange={(e) => update("ward", e.target.value)} /></div>
               </div>
             </div>
-
-            {/* Qualifications */}
             <div className="bg-card border border-border rounded-lg p-6">
               <h3 className="text-base font-bold text-foreground mb-4">Qualifications</h3>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Highest Education Level</label>
-                  <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.education} onChange={(e) => update("education", e.target.value)}>
-                    <option value="">Select</option>
-                    <option value="certificate">Certificate</option>
-                    <option value="diploma">Diploma</option>
-                    <option value="bachelors">Bachelor's Degree</option>
-                    <option value="masters">Master's Degree</option>
-                    <option value="phd">PhD</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Years of Relevant Experience</label>
-                  <Input type="number" min="0" value={form.experience} onChange={(e) => update("experience", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-foreground mb-1">Cover Letter / Additional Information</label>
-                  <Textarea rows={5} value={form.coverLetter} onChange={(e) => update("coverLetter", e.target.value)} placeholder="Tell us why you are a good fit for this role..." />
-                </div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Highest Education Level</label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.education} onChange={(e) => update("education", e.target.value)}><option value="">Select</option><option value="certificate">Certificate</option><option value="diploma">Diploma</option><option value="bachelors">Bachelor's Degree</option><option value="masters">Master's Degree</option><option value="phd">PhD</option></select></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Years of Relevant Experience</label><Input type="number" min="0" value={form.experience} onChange={(e) => update("experience", e.target.value)} /></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Cover Letter / Additional Information</label><Textarea rows={5} value={form.coverLetter} onChange={(e) => update("coverLetter", e.target.value)} placeholder="Tell us why you are a good fit for this role..." /></div>
               </div>
             </div>
-
             <div className="flex justify-end">
-              <Button type="submit" size="lg" className="px-10" disabled={submitting}>
-                {submitting ? "Submitting..." : "Submit Application"}
-              </Button>
+              <Button type="submit" size="lg" className="px-10" disabled={submitting}>{submitting ? "Submitting..." : "Submit Application"}</Button>
             </div>
           </form>
         </div>
-      </main>
-      <SiteFooter />
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

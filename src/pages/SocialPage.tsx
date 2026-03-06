@@ -1,5 +1,4 @@
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import PageLayout from "@/components/PageLayout";
 import { Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react";
 
 const socialLinks = [
@@ -12,22 +11,16 @@ const socialLinks = [
 
 const SocialPage = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="py-12 md:py-16">
+    <PageLayout>
+      <div className="py-12 md:py-16">
         <div className="container mx-auto max-w-4xl px-6">
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">Follow Us</h1>
           <p className="text-base text-muted-foreground mb-12 max-w-2xl">
             Stay connected with Infinite Insight through our social media channels.
           </p>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.url}
-                className="flex items-start gap-4 p-6 bg-secondary rounded border border-border hover:border-primary transition-colors group"
-              >
+              <a key={social.label} href={social.url} className="flex items-start gap-4 p-6 bg-secondary rounded border border-border hover:border-primary transition-colors group">
                 <social.icon className="w-8 h-8 text-primary group-hover:text-accent transition-colors flex-shrink-0 mt-1" />
                 <div>
                   <h3 className="text-lg font-heading font-bold text-foreground group-hover:text-primary transition-colors">{social.label}</h3>
@@ -37,9 +30,8 @@ const SocialPage = () => {
             ))}
           </div>
         </div>
-      </main>
-      <SiteFooter />
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 
