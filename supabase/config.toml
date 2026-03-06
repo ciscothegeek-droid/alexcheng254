@@ -1,1 +1,7 @@
 project_id = "xsajnuixboedpqkvmwhb"
+
+[functions.send-invitation]
+verify_jwt = false
+
+[functions.pesapal-payment]
+verify_jwt = false
