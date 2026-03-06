@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { getJobById } from "@/lib/careersData";
+import { getJobById, type JobListing } from "@/lib/careersData";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Calendar, ArrowLeft, CheckCircle } from "lucide-react";
+import { MapPin, Calendar, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,7 +24,8 @@ const countries = ["Kenya", "Uganda", "Tanzania", "Rwanda", "Ethiopia", "South A
 
 const CareerApplyPage = () => {
   const { id } = useParams();
-  const job = getJobById(id || "");
+  const [job, setJob] = useState<JobListing | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
@@ -35,7 +36,28 @@ const CareerApplyPage = () => {
     ward: "", education: "", experience: "", coverLetter: "",
   });
 
+  useEffect(() => {
+    if (id) {
+      getJobById(id).then((data) => {
+        setJob(data);
+        setLoading(false);
+      });
+    }
+  }, [id]);
+
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="py-16 text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   if (!job) {
     return (

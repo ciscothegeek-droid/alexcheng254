@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const checkAdmin = async (userId: string) => {
-    const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    const { data } = await (supabase.rpc as any)("has_role", { _user_id: userId, _role: "admin" });
     setIsAdmin(!!data);
   };
 

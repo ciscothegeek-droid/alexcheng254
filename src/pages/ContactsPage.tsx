@@ -1,8 +1,37 @@
+import { useState } from "react";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const ContactsPage = () => {
+  const { toast } = useToast();
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const { error } = await (supabase as any).from("contact_messages").insert({
+        name: form.name,
+        email: form.email,
+        subject: form.subject || null,
+        message: form.message,
+      });
+      if (error) throw error;
+      setSubmitted(true);
+      toast({ title: "Message Sent!", description: "We'll get back to you soon." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to send message.", variant: "destructive" });
+    }
+    setSubmitting(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -47,30 +76,39 @@ const ContactsPage = () => {
             </div>
 
             {/* Contact Form */}
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-              <div>
-                <label className="block text-sm font-body font-semibold text-foreground mb-1">Name</label>
-                <input type="text" className="w-full px-4 py-2 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            {submitted ? (
+              <div className="flex flex-col items-center justify-center text-center py-12">
+                <CheckCircle className="w-16 h-16 text-primary mb-4" />
+                <h3 className="text-lg font-heading font-bold text-foreground mb-2">Message Sent!</h3>
+                <p className="text-sm text-muted-foreground">We'll get back to you as soon as possible.</p>
               </div>
-              <div>
-                <label className="block text-sm font-body font-semibold text-foreground mb-1">Email</label>
-                <input type="email" className="w-full px-4 py-2 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-              </div>
-              <div>
-                <label className="block text-sm font-body font-semibold text-foreground mb-1">Subject</label>
-                <input type="text" className="w-full px-4 py-2 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-              </div>
-              <div>
-                <label className="block text-sm font-body font-semibold text-foreground mb-1">Message</label>
-                <textarea rows={5} className="w-full px-4 py-2 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
-              </div>
-              <button
-                type="submit"
-                className="px-6 py-2 bg-primary text-primary-foreground font-body font-semibold text-sm rounded hover:opacity-90 transition-opacity"
-              >
-                Send Message
-              </button>
-            </form>
+            ) : (
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                <div>
+                  <label className="block text-sm font-body font-semibold text-foreground mb-1">Name *</label>
+                  <input required type="text" value={form.name} onChange={(e) => update("name", e.target.value)} className="w-full px-4 py-2 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-body font-semibold text-foreground mb-1">Email *</label>
+                  <input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} className="w-full px-4 py-2 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-body font-semibold text-foreground mb-1">Subject</label>
+                  <input type="text" value={form.subject} onChange={(e) => update("subject", e.target.value)} className="w-full px-4 py-2 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+                </div>
+                <div>
+                  <label className="block text-sm font-body font-semibold text-foreground mb-1">Message *</label>
+                  <textarea required rows={5} value={form.message} onChange={(e) => update("message", e.target.value)} className="w-full px-4 py-2 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
+                </div>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-6 py-2 bg-primary text-primary-foreground font-body font-semibold text-sm rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {submitting ? "Sending..." : "Send Message"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </main>

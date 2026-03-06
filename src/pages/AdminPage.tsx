@@ -42,7 +42,7 @@ const AdminPage = () => {
   const [activeTab, setActiveTab] = useState<"listings" | "applications">("listings");
 
   // Listings state
-  const [jobs, setJobs] = useState(getJobListings());
+  const [jobs, setJobs] = useState<JobListing[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<typeof emptyJob>(emptyJob);
@@ -64,6 +64,10 @@ const AdminPage = () => {
       navigate("/auth");
     }
   }, [user, isAdmin, authLoading]);
+
+  useEffect(() => {
+    refresh();
+  }, []);
 
   useEffect(() => {
     if (activeTab === "applications") loadApplications();
@@ -115,22 +119,24 @@ const AdminPage = () => {
     setSendingInvite(false);
   };
 
-  // Listings handlers
-  const refresh = () => setJobs(getJobListings());
+  const refresh = async () => {
+    const data = await getJobListings();
+    setJobs(data);
+  };
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
-  const handleDelete = (id: string) => {
-    if (confirm("Delete this listing?")) { deleteJobListing(id); refresh(); }
+  const handleDelete = async (id: string) => {
+    if (confirm("Delete this listing?")) { await deleteJobListing(id); refresh(); }
   };
   const handleEdit = (job: JobListing) => {
     setEditingId(job.id);
     setForm({ title: job.title, category: job.category, location: job.location, type: job.type, description: job.description, requirements: job.requirements, deadline: job.deadline });
     setShowForm(true);
   };
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const data = { ...form, requirements: form.requirements.filter(Boolean) };
-    if (editingId) updateJobListing(editingId, data);
-    else addJobListing(data);
+    if (editingId) await updateJobListing(editingId, data);
+    else await addJobListing(data);
     setForm(emptyJob); setShowForm(false); setEditingId(null); refresh();
   };
   const addReq = () => setForm((p) => ({ ...p, requirements: [...p.requirements, ""] }));
