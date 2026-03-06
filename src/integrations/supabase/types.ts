@@ -14,16 +14,344 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          admin_feedback: string | null
+          constituency: string | null
+          country: string
+          county: string | null
+          cover_letter: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          education: string | null
+          email: string
+          experience: string | null
+          first_name: string
+          gender: string | null
+          id: string
+          id_number: string
+          job_listing_id: string
+          job_title: string
+          last_name: string
+          phone: string
+          status: string
+          ward: string | null
+        }
+        Insert: {
+          admin_feedback?: string | null
+          constituency?: string | null
+          country?: string
+          county?: string | null
+          cover_letter?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          education?: string | null
+          email: string
+          experience?: string | null
+          first_name: string
+          gender?: string | null
+          id?: string
+          id_number: string
+          job_listing_id: string
+          job_title: string
+          last_name: string
+          phone: string
+          status?: string
+          ward?: string | null
+        }
+        Update: {
+          admin_feedback?: string | null
+          constituency?: string | null
+          country?: string
+          county?: string | null
+          cover_letter?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          education?: string | null
+          email?: string
+          experience?: string | null
+          first_name?: string
+          gender?: string | null
+          id?: string
+          id_number?: string
+          job_listing_id?: string
+          job_title?: string
+          last_name?: string
+          phone?: string
+          status?: string
+          ward?: string | null
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          date: string | null
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          published: boolean | null
+          slug: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          date?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          published?: boolean | null
+          slug: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          date?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          published?: boolean | null
+          slug?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      contact_messages: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          message: string
+          name: string
+          read: boolean | null
+          subject: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          message: string
+          name: string
+          read?: boolean | null
+          subject?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          read?: boolean | null
+          subject?: string | null
+        }
+        Relationships: []
+      }
+      invitation_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string
+          id: string
+          invitation_token_id: string
+          paid_at: string | null
+          payment_method: string | null
+          pesapal_merchant_reference: string | null
+          pesapal_order_tracking_id: string | null
+          status: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          invitation_token_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          pesapal_merchant_reference?: string | null
+          pesapal_order_tracking_id?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          invitation_token_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          pesapal_merchant_reference?: string | null
+          pesapal_order_tracking_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_payments_invitation_token_id_fkey"
+            columns: ["invitation_token_id"]
+            isOneToOne: false
+            referencedRelation: "invitation_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitation_tokens: {
+        Row: {
+          application_id: string
+          created_at: string | null
+          cv_uploaded: boolean | null
+          email: string
+          expires_at: string | null
+          id: string
+          payment_completed: boolean | null
+          token: string
+          webinar_date: string | null
+          webinar_description: string | null
+          webinar_link: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string | null
+          cv_uploaded?: boolean | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          payment_completed?: boolean | null
+          token?: string
+          webinar_date?: string | null
+          webinar_description?: string | null
+          webinar_link?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string | null
+          cv_uploaded?: boolean | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          payment_completed?: boolean | null
+          token?: string
+          webinar_date?: string | null
+          webinar_description?: string | null
+          webinar_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_tokens_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_listings: {
+        Row: {
+          category: string
+          created_at: string | null
+          deadline: string | null
+          description: string
+          id: string
+          location: string
+          requirements: string[] | null
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          location?: string
+          requirements?: string[] | null
+          title: string
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          location?: string
+          requirements?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +478,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
