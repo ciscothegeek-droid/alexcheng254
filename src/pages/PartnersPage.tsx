@@ -1,5 +1,4 @@
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import PageLayout from "@/components/PageLayout";
 
 const partners = [
   { name: "Consumer Ideas Africa", location: "Nigeria", description: "Leading consumer research firm in West Africa." },
@@ -12,15 +11,13 @@ const partners = [
 
 const PartnersPage = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="py-12 md:py-16">
+    <PageLayout>
+      <div className="py-12 md:py-16">
         <div className="container mx-auto max-w-5xl px-6">
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">Our Partners</h1>
           <p className="text-base text-muted-foreground mb-12 max-w-2xl">
             We work with a network of trusted research partners across Africa and internationally, ensuring quality delivery in every market.
           </p>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {partners.map((partner) => (
               <div key={partner.name} className="p-6 bg-secondary rounded border border-border">
@@ -31,9 +28,8 @@ const PartnersPage = () => {
             ))}
           </div>
         </div>
-      </main>
-      <SiteFooter />
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

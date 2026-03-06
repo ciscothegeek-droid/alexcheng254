@@ -1,11 +1,9 @@
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import PageLayout from "@/components/PageLayout";
 
 const AboutPage = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="py-12 md:py-16">
+    <PageLayout>
+      <div className="py-12 md:py-16">
         <div className="container mx-auto max-w-4xl px-6">
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-8">About Us</h1>
 
@@ -37,9 +35,8 @@ const AboutPage = () => {
             ))}
           </div>
         </div>
-      </main>
-      <SiteFooter />
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

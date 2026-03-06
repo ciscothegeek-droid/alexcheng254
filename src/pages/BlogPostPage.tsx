@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import PageLayout from "@/components/PageLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
@@ -27,7 +26,7 @@ const BlogPostPage = () => {
         .select("*")
         .eq("slug", slug)
         .eq("published", true)
-        .single()
+        .maybeSingle()
         .then(({ data, error }: any) => {
           if (!error && data) setPost(data);
           setLoading(false);
@@ -37,39 +36,31 @@ const BlogPostPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <SiteHeader />
-        <main className="py-16 text-center">
+      <PageLayout>
+        <div className="py-16 text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-        </main>
-        <SiteFooter />
-      </div>
+        </div>
+      </PageLayout>
     );
   }
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-background">
-        <SiteHeader />
-        <main className="py-16 text-center">
+      <PageLayout>
+        <div className="py-16 text-center">
           <h1 className="text-2xl font-heading font-bold text-foreground mb-4">Post Not Found</h1>
-          <Link to="/blog" className="text-primary hover:text-accent transition-colors font-semibold">
-            ← Back to Blog
-          </Link>
-        </main>
-        <SiteFooter />
-      </div>
+          <Link to="/blog" className="text-primary hover:text-accent transition-colors font-semibold">← Back to Blog</Link>
+        </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="py-12 md:py-16">
+    <PageLayout>
+      <div className="py-12 md:py-16">
         <div className="container mx-auto max-w-3xl px-6">
           <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-primary hover:text-accent transition-colors mb-8">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Blog
+            <ArrowLeft className="w-4 h-4" /> Back to Blog
           </Link>
           <span className="block text-xs text-muted-foreground font-body mb-2">{post.date}</span>
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-6">{post.title}</h1>
@@ -82,9 +73,8 @@ const BlogPostPage = () => {
             ))}
           </div>
         </div>
-      </main>
-      <SiteFooter />
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 

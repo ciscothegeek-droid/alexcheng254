@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import SiteHeader from "@/components/SiteHeader";
-import SiteFooter from "@/components/SiteFooter";
+import PageLayout from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +14,6 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // If already signed in as admin, redirect
   if (!authLoading && user && isAdmin) {
     navigate("/admin");
     return null;
@@ -36,13 +34,10 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <SiteHeader />
-      <main className="py-16">
+    <PageLayout>
+      <div className="py-16">
         <div className="container mx-auto max-w-md px-6">
-          <h1 className="text-2xl font-heading font-bold text-foreground mb-6 text-center">
-            Admin Sign In
-          </h1>
+          <h1 className="text-2xl font-heading font-bold text-foreground mb-6 text-center">Admin Sign In</h1>
           <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 space-y-4">
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1">Email</label>
@@ -57,9 +52,8 @@ const AuthPage = () => {
             </Button>
           </form>
         </div>
-      </main>
-      <SiteFooter />
-    </div>
+      </div>
+    </PageLayout>
   );
 };
 
