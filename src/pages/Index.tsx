@@ -15,6 +15,7 @@ const Index = () => {
         <BlogSection />
       </main>
       <SiteFooter />
+      </div>
     </div>
   );
 };
