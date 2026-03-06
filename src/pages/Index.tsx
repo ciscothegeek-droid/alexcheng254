@@ -6,7 +6,8 @@ import SiteFooter from "@/components/SiteFooter";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#e8e8e8] flex justify-center">
+      <div className="w-full max-w-[960px] bg-background shadow-lg">
       <SiteHeader />
       <main>
         <AboutSection />
