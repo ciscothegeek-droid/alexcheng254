@@ -299,7 +299,7 @@ Infinite Insight Recruitment Team
             email: app.email,
           },
           message: `✅ Invitation created but email delivery failed. Please share manually: ${invitationUrl}`,
-          error: emailError.message
+          error: (emailError as Error).message
         }),
         { 
           status: 207, // Partial success
@@ -324,7 +324,7 @@ Infinite Insight Recruitment Team
     
   } catch (err) {
     console.error("Unexpected error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
