@@ -3,23 +3,14 @@ import { useParams, Link } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { getJobById, type JobListing } from "@/lib/careersData";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Calendar, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
+import { MapPin, Calendar, ArrowLeft, CheckCircle, Loader2, Users, DollarSign, Timer, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { getCountries, getLevel1Divisions, getLevel2Divisions, getLevel3Divisions, getLevel1Label, getLevel2Label, getLevel3Label } from "@/lib/locationData";
 
-const kenyanCounties = [
-  "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet", "Embu", "Garissa",
-  "Homa Bay", "Isiolo", "Kajiado", "Kakamega", "Kericho", "Kiambu", "Kilifi",
-  "Kirinyaga", "Kisii", "Kisumu", "Kitui", "Kwale", "Laikipia", "Lamu", "Machakos",
-  "Makueni", "Mandera", "Marsabit", "Meru", "Migori", "Mombasa", "Murang'a",
-  "Nairobi", "Nakuru", "Nandi", "Narok", "Nyamira", "Nyandarua", "Nyeri",
-  "Samburu", "Siaya", "Taita-Taveta", "Tana River", "Tharaka-Nithi", "Trans-Nzoia",
-  "Turkana", "Uasin Gishu", "Vihiga", "Wajir", "West Pokot",
-];
-
-const countries = ["Kenya", "Uganda", "Tanzania", "Rwanda", "Ethiopia", "South Africa", "Nigeria", "Ghana"];
+const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
 const CareerApplyPage = () => {
   const { id } = useParams();
@@ -42,6 +33,25 @@ const CareerApplyPage = () => {
   }, [id]);
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
+
+  const handleCountryChange = (country: string) => {
+    setForm(p => ({ ...p, country, county: "", constituency: "", ward: "" }));
+  };
+  const handleCountyChange = (county: string) => {
+    setForm(p => ({ ...p, county, constituency: "", ward: "" }));
+  };
+  const handleConstituencyChange = (constituency: string) => {
+    setForm(p => ({ ...p, constituency, ward: "" }));
+  };
+
+  const countries = getCountries();
+  const level1Options = form.country ? getLevel1Divisions(form.country) : [];
+  const level2Options = form.country && form.county ? getLevel2Divisions(form.country, form.county) : [];
+  const level3Options = form.country && form.county && form.constituency ? getLevel3Divisions(form.country, form.county, form.constituency) : [];
+
+  const l1Label = form.country ? getLevel1Label(form.country) : "County/Region";
+  const l2Label = form.country ? getLevel2Label(form.country) : "Constituency/District";
+  const l3Label = form.country ? getLevel3Label(form.country) : "Ward";
 
   if (loading) {
     return (
@@ -111,9 +121,21 @@ const CareerApplyPage = () => {
             </div>
             <h1 className="text-2xl font-heading font-bold text-foreground mb-3">{job.title}</h1>
             <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
-              <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{job.location}</span>
+              <span className="flex items-center gap-1"><MapPin className="w-4 h-4" />{job.country ? [job.ward, job.constituency, job.county, job.country].filter(Boolean).join(", ") : job.location}</span>
               <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />Deadline: {job.deadline}</span>
+              {(job.employees_required && job.employees_required > 1) && (
+                <span className="flex items-center gap-1"><Users className="w-4 h-4" />{job.employees_required} positions</span>
+              )}
             </div>
+            {/* Job Terms */}
+            {(job.payment_per_day || job.timespan || job.hours_per_day || job.allowances) && (
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4 border-t border-border pt-3">
+                {job.payment_per_day && <span className="flex items-center gap-1"><DollarSign className="w-4 h-4" />KSH {job.payment_per_day}/day</span>}
+                {job.timespan && <span className="flex items-center gap-1"><Timer className="w-4 h-4" />{job.timespan}</span>}
+                {job.hours_per_day && <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{job.hours_per_day} hrs/day</span>}
+                {job.allowances && <span className="flex items-center gap-1">💰 {job.allowances}</span>}
+              </div>
+            )}
             <p className="text-sm text-muted-foreground mb-4">{job.description}</p>
             <h3 className="text-sm font-bold text-foreground mb-2">Requirements:</h3>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
@@ -130,23 +152,59 @@ const CareerApplyPage = () => {
                 <div><label className="block text-sm font-semibold text-foreground mb-1">Email Address *</label><Input type="email" required value={form.email} onChange={(e) => update("email", e.target.value)} /></div>
                 <div><label className="block text-sm font-semibold text-foreground mb-1">Phone Number *</label><Input type="tel" required value={form.phone} onChange={(e) => update("phone", e.target.value)} /></div>
                 <div><label className="block text-sm font-semibold text-foreground mb-1">ID / Passport Number *</label><Input required value={form.idNumber} onChange={(e) => update("idNumber", e.target.value)} /></div>
-                <div><label className="block text-sm font-semibold text-foreground mb-1">Gender</label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.gender} onChange={(e) => update("gender", e.target.value)}><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Gender</label><select className={selectClass} value={form.gender} onChange={(e) => update("gender", e.target.value)}><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
                 <div><label className="block text-sm font-semibold text-foreground mb-1">Date of Birth</label><Input type="date" value={form.dateOfBirth} onChange={(e) => update("dateOfBirth", e.target.value)} /></div>
               </div>
             </div>
             <div className="bg-card border border-border rounded-lg p-6">
               <h3 className="text-base font-bold text-foreground mb-4">Region</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label className="block text-sm font-semibold text-foreground mb-1">Country *</label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" required value={form.country} onChange={(e) => update("country", e.target.value)}><option value="">Select Country</option>{countries.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
-                <div><label className="block text-sm font-semibold text-foreground mb-1">County</label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.county} onChange={(e) => update("county", e.target.value)}><option value="">Select County</option>{kenyanCounties.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
-                <div><label className="block text-sm font-semibold text-foreground mb-1">Constituency</label><Input placeholder="Enter constituency" value={form.constituency} onChange={(e) => update("constituency", e.target.value)} /></div>
-                <div><label className="block text-sm font-semibold text-foreground mb-1">Ward</label><Input placeholder="Enter ward" value={form.ward} onChange={(e) => update("ward", e.target.value)} /></div>
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1">Country *</label>
+                  <select className={selectClass} required value={form.country} onChange={(e) => handleCountryChange(e.target.value)}>
+                    <option value="">Select Country</option>
+                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1">{l1Label}</label>
+                  {level1Options.length > 0 ? (
+                    <select className={selectClass} value={form.county} onChange={(e) => handleCountyChange(e.target.value)}>
+                      <option value="">Select {l1Label}</option>
+                      {level1Options.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  ) : (
+                    <Input placeholder={`Enter ${l1Label}`} value={form.county} onChange={(e) => update("county", e.target.value)} />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1">{l2Label}</label>
+                  {level2Options.length > 0 ? (
+                    <select className={selectClass} value={form.constituency} onChange={(e) => handleConstituencyChange(e.target.value)}>
+                      <option value="">Select {l2Label}</option>
+                      {level2Options.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  ) : (
+                    <Input placeholder={`Enter ${l2Label}`} value={form.constituency} onChange={(e) => update("constituency", e.target.value)} />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-1">{l3Label}</label>
+                  {level3Options.length > 0 ? (
+                    <select className={selectClass} value={form.ward} onChange={(e) => update("ward", e.target.value)}>
+                      <option value="">Select {l3Label}</option>
+                      {level3Options.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  ) : (
+                    <Input placeholder={`Enter ${l3Label}`} value={form.ward} onChange={(e) => update("ward", e.target.value)} />
+                  )}
+                </div>
               </div>
             </div>
             <div className="bg-card border border-border rounded-lg p-6">
               <h3 className="text-base font-bold text-foreground mb-4">Qualifications</h3>
               <div className="space-y-4">
-                <div><label className="block text-sm font-semibold text-foreground mb-1">Highest Education Level</label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.education} onChange={(e) => update("education", e.target.value)}><option value="">Select</option><option value="certificate">Certificate</option><option value="diploma">Diploma</option><option value="bachelors">Bachelor's Degree</option><option value="masters">Master's Degree</option><option value="phd">PhD</option></select></div>
+                <div><label className="block text-sm font-semibold text-foreground mb-1">Highest Education Level</label><select className={selectClass} value={form.education} onChange={(e) => update("education", e.target.value)}><option value="">Select</option><option value="certificate">Certificate</option><option value="diploma">Diploma</option><option value="bachelors">Bachelor's Degree</option><option value="masters">Master's Degree</option><option value="phd">PhD</option></select></div>
                 <div><label className="block text-sm font-semibold text-foreground mb-1">Years of Relevant Experience</label><Input type="number" min="0" value={form.experience} onChange={(e) => update("experience", e.target.value)} /></div>
                 <div><label className="block text-sm font-semibold text-foreground mb-1">Cover Letter / Additional Information</label><Textarea rows={5} value={form.coverLetter} onChange={(e) => update("coverLetter", e.target.value)} placeholder="Tell us why you are a good fit for this role..." /></div>
               </div>

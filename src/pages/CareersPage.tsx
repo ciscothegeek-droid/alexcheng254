@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import PageLayout from "@/components/PageLayout";
 import { getJobListings, type JobListing } from "@/lib/careersData";
-import { MapPin, Clock, Briefcase, Calendar, Loader2 } from "lucide-react";
+import { MapPin, Clock, Briefcase, Calendar, Loader2, Users, DollarSign, Timer } from "lucide-react";
 
 const CareersPage = () => {
   const [jobs, setJobs] = useState<JobListing[]>([]);
@@ -52,8 +52,17 @@ const CareersPage = () => {
                     <h3 className="text-lg font-heading font-bold text-foreground group-hover:text-primary transition-colors mb-3">{job.title}</h3>
                     <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{job.description}</p>
                     <div className="space-y-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /><span>{job.location}</span></div>
+                      <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" /><span>{job.country ? [job.ward, job.constituency, job.county, job.country].filter(Boolean).join(", ") : job.location}</span></div>
                       <div className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /><span>Deadline: {job.deadline}</span></div>
+                      {(job.employees_required && job.employees_required > 1) && (
+                        <div className="flex items-center gap-2"><Users className="w-3.5 h-3.5" /><span>{job.employees_required} positions</span></div>
+                      )}
+                      {job.payment_per_day && (
+                        <div className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5" /><span>KSH {job.payment_per_day}/day</span></div>
+                      )}
+                      {job.timespan && (
+                        <div className="flex items-center gap-2"><Timer className="w-3.5 h-3.5" /><span>{job.timespan}</span></div>
+                      )}
                     </div>
                     <div className="mt-4 text-sm font-semibold text-primary group-hover:underline">Apply Now →</div>
                   </Link>

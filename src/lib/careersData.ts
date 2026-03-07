@@ -11,6 +11,16 @@ export interface JobListing {
   deadline: string;
   created_at?: string;
   updated_at?: string;
+  // New fields
+  employees_required?: number;
+  country?: string;
+  county?: string;
+  constituency?: string;
+  ward?: string;
+  timespan?: string;
+  payment_per_day?: number;
+  allowances?: string;
+  hours_per_day?: number;
 }
 
 export const getJobListings = async (): Promise<JobListing[]> => {
@@ -50,6 +60,15 @@ export const addJobListing = async (job: Omit<JobListing, "id">): Promise<JobLis
       description: job.description,
       requirements: job.requirements,
       deadline: job.deadline || null,
+      employees_required: job.employees_required || 1,
+      country: job.country || null,
+      county: job.county || null,
+      constituency: job.constituency || null,
+      ward: job.ward || null,
+      timespan: job.timespan || null,
+      payment_per_day: job.payment_per_day || null,
+      allowances: job.allowances || null,
+      hours_per_day: job.hours_per_day || null,
     })
     .select()
     .single();
@@ -61,17 +80,27 @@ export const addJobListing = async (job: Omit<JobListing, "id">): Promise<JobLis
 };
 
 export const updateJobListing = async (id: string, updates: Partial<JobListing>): Promise<void> => {
+  const updateData: any = {};
+  if (updates.title !== undefined) updateData.title = updates.title;
+  if (updates.category !== undefined) updateData.category = updates.category;
+  if (updates.location !== undefined) updateData.location = updates.location;
+  if (updates.type !== undefined) updateData.type = updates.type;
+  if (updates.description !== undefined) updateData.description = updates.description;
+  if (updates.requirements !== undefined) updateData.requirements = updates.requirements;
+  if (updates.deadline !== undefined) updateData.deadline = updates.deadline || null;
+  if (updates.employees_required !== undefined) updateData.employees_required = updates.employees_required;
+  if (updates.country !== undefined) updateData.country = updates.country;
+  if (updates.county !== undefined) updateData.county = updates.county;
+  if (updates.constituency !== undefined) updateData.constituency = updates.constituency;
+  if (updates.ward !== undefined) updateData.ward = updates.ward;
+  if (updates.timespan !== undefined) updateData.timespan = updates.timespan;
+  if (updates.payment_per_day !== undefined) updateData.payment_per_day = updates.payment_per_day;
+  if (updates.allowances !== undefined) updateData.allowances = updates.allowances;
+  if (updates.hours_per_day !== undefined) updateData.hours_per_day = updates.hours_per_day;
+
   const { error } = await (supabase as any)
     .from("job_listings")
-    .update({
-      ...(updates.title !== undefined && { title: updates.title }),
-      ...(updates.category !== undefined && { category: updates.category }),
-      ...(updates.location !== undefined && { location: updates.location }),
-      ...(updates.type !== undefined && { type: updates.type }),
-      ...(updates.description !== undefined && { description: updates.description }),
-      ...(updates.requirements !== undefined && { requirements: updates.requirements }),
-      ...(updates.deadline !== undefined && { deadline: updates.deadline || null }),
-    })
+    .update(updateData)
     .eq("id", id);
   if (error) console.error("Error updating job listing:", error);
 };
