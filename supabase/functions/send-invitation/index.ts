@@ -299,7 +299,7 @@ Infinite Insight Recruitment Team
             email: app.email,
           },
           message: `✅ Invitation created but email delivery failed. Please share manually: ${invitationUrl}`,
-          error: emailError.message
+          error: (emailError as Error).message
         }),
         { 
           status: 207, // Partial success
