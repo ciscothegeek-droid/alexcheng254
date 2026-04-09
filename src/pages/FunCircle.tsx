@@ -8,7 +8,7 @@ import { MobileFriendsSheet } from "@/components/fun-circle/MobileFriendsSheet";
 import { ProfileHeader } from "@/components/fun-circle/ProfileHeader";
 import { FunCircleSettingsSheet } from "@/components/fun-circle/FunCircleSettingsSheet";
 import { FunCircleSettingsProvider } from "@/contexts/FunCircleSettingsContext";
-import { useFunCircleStories, ReactionType } from "@/hooks/useFunCircleStories";
+import { useFunCircleStories, ReactionType, Story } from "@/hooks/useFunCircleStories";
 import { useFunCircleMessages } from "@/hooks/useFunCircleMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
