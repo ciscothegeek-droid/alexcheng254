@@ -219,6 +219,9 @@ function FunCircleContent() {
               <ProfileHeader />
             </div>
 
+            {/* Stories Bar - Facebook style */}
+            <StoriesBar stories={stories} />
+
             {/* Create Story */}
             <CreateStoryForm />
 
