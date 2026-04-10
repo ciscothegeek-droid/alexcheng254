@@ -63,7 +63,6 @@ export default function ShopDetail() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [tab, setTab] = useState("products");
   const [showProfileEditor, setShowProfileEditor] = useState(false);
-  const [showProfileEditor, setShowProfileEditor] = useState(false);
 
   const isOwner = user?.id === shop?.user_id;
 
