@@ -254,6 +254,13 @@ export default function Dashboard() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Promotion Reminder */}
+            {filteredListings.length > 0 && (
+              <div className="mt-4">
+                <PromotionReminder listingType={filteredListings[0].listing_type} />
+              </div>
+            )}
           </>
         )}
       </div>
