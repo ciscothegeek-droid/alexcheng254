@@ -321,7 +321,7 @@ export default function ShopDetail() {
                 </Button>
               )}
               {isOwner && (
-                <Button size="sm" variant="default" onClick={() => setShowListingForm(true)} className="gap-1">
+                <Button size="sm" variant="default" onClick={() => navigate("/dashboard?tab=shop&manageAds=1")} className="gap-1">
                   <Plus className="h-4 w-4" />Add Listing
                 </Button>
               )}
