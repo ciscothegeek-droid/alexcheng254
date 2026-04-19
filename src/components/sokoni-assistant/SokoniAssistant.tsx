@@ -234,7 +234,7 @@ export function SokoniAssistant() {
         >
           <Sparkles className="h-6 w-6" />
           <span className="sr-only">Sokoni Assistant</span>
-          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
+          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary-foreground ring-2 ring-background animate-pulse" />
         </button>
       )}
 
