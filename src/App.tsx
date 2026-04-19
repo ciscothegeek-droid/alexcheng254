@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { SokoniAssistant } from "@/components/sokoni-assistant/SokoniAssistant";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Eager load critical routes
@@ -71,6 +72,7 @@ const App = () => (
           <AuthProvider>
             <ScrollToTop />
             <PWAInstallPrompt />
+            <SokoniAssistant />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
