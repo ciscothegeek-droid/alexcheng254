@@ -1,82 +1,163 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mic, MicOff, X, Volume2, VolumeX, Sparkles } from "lucide-react";
+import { Mic, MicOff, X, Volume2, VolumeX, Sparkles, PhoneOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { detectIntent } from "@/lib/sokoni-assistant/intents";
+import { detectIntent, welcomeMessage, type AssistantContext } from "@/lib/sokoni-assistant/intents";
 import {
-  getSpeechRecognition,
   isSpeechRecognitionSupported,
   speak,
   stopSpeaking,
 } from "@/lib/sokoni-assistant/speech";
+import { LiveSpeechSession } from "@/lib/sokoni-assistant/liveSession";
+import {
+  appendLocal,
+  clearHistory,
+  endConversation,
+  loadHistory,
+  persistMessage,
+  type StoredMsg,
+} from "@/lib/sokoni-assistant/persistence";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { AssistantMessage } from "./AssistantMessage";
 
-type Msg = { role: "user" | "assistant"; text: string; id: string };
-
-const WELCOME =
-  "Hi! I'm Sokoni Assistant. Tap the mic and tell me what you need — search, navigate, or ask how something works.";
+const QUICK_PROMPTS = [
+  "Show me around",
+  "Find iPhones under 30k in Nairobi",
+  "How do I open a shop?",
+  "Why is SokoniArena special?",
+];
 
 export function SokoniAssistant() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const username = useMemo(() => {
+    const meta: any = user?.user_metadata || {};
+    return (meta.username || meta.full_name || (user?.email ? user.email.split("@")[0] : null)) ?? null;
+  }, [user]);
+
   const [open, setOpen] = useState(false);
+  const [liveOn, setLiveOn] = useState(false);
   const [listening, setListening] = useState(false);
   const [muted, setMuted] = useState(false);
   const [partial, setPartial] = useState("");
-  const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", text: WELCOME, id: "welcome" },
-  ]);
-  const recRef = useRef<ReturnType<typeof getSpeechRecognition>>(null);
+  const [messages, setMessages] = useState<StoredMsg[]>([]);
+  const sessionRef = useRef<LiveSpeechSession | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const supported = isSpeechRecognitionSupported();
+  const userIdRef = useRef<string | null>(null);
 
-  // Auto-scroll on new messages
+  // Welcome + load history on open
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    if (!open) return;
+    const ctx: AssistantContext = { username, isLoggedIn: !!user, walkthroughStep: 0 };
+    const saved = user ? loadHistory(user.id) : [];
+    if (saved.length) {
+      setMessages(saved);
+    } else {
+      const welcome: StoredMsg = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        text: welcomeMessage(ctx),
+        ts: Date.now(),
+      };
+      setMessages([welcome]);
+      if (!muted) speak(welcome.text);
+    }
+    userIdRef.current = user?.id ?? null;
+  }, [open, user, username]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-scroll
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, partial]);
 
-  const reply = useCallback(
-    (userText: string) => {
-      const result = detectIntent(userText);
-      const id = crypto.randomUUID();
-      setMessages((prev) => [
-        ...prev,
-        { role: "user", text: userText, id: crypto.randomUUID() },
-        { role: "assistant", text: result.reply, id },
-      ]);
-      if (!muted) speak(result.reply);
+  const pushMessage = useCallback((m: StoredMsg) => {
+    setMessages((prev) => [...prev, m]);
+    const uid = userIdRef.current;
+    if (uid) {
+      appendLocal(uid, m);
+      // best-effort cloud persistence
+      persistMessage(uid, m.role, m.text);
+    }
+  }, []);
 
-      if (result.action) {
-        // Small delay so the user hears the reply start.
-        setTimeout(() => {
-          if (result.action?.type === "navigate") {
-            navigate(result.action.path);
-          } else if (result.action?.type === "search") {
-            navigate(`/search?q=${encodeURIComponent(result.action.query)}`);
-          } else if (result.action?.type === "external") {
-            window.open(result.action.url, "_blank", "noopener,noreferrer");
+  const reply = useCallback(
+    async (userText: string) => {
+      const userMsg: StoredMsg = {
+        id: crypto.randomUUID(),
+        role: "user",
+        text: userText,
+        ts: Date.now(),
+      };
+      pushMessage(userMsg);
+
+      const ctx: AssistantContext = { username, isLoggedIn: !!user, walkthroughStep: 0 };
+      const result = await detectIntent(userText, ctx);
+      const botMsg: StoredMsg = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        text: result.reply,
+        ts: Date.now(),
+      };
+      pushMessage(botMsg);
+
+      // Speak (pause mic while talking to avoid feedback)
+      if (!muted) {
+        sessionRef.current?.pauseForSpeaking();
+        speak(result.reply, {
+          onEnd: () => sessionRef.current?.resumeAfterSpeaking(),
+        });
+      }
+
+      // Multi-step walkthrough
+      if (result.action?.type === "speak_steps") {
+        const steps = result.action.steps.slice(1); // first already spoken as reply
+        let i = 0;
+        const next = () => {
+          if (i >= steps.length || muted) {
+            sessionRef.current?.resumeAfterSpeaking();
+            return;
           }
-        }, 600);
+          const stepMsg: StoredMsg = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            text: steps[i],
+            ts: Date.now(),
+          };
+          pushMessage(stepMsg);
+          speak(steps[i], { onEnd: () => { i++; setTimeout(next, 250); } });
+        };
+        sessionRef.current?.pauseForSpeaking();
+        setTimeout(next, 800);
+        return;
+      }
+
+      if (result.action?.type === "navigate") {
+        setTimeout(() => navigate(result.action!.type === "navigate" ? (result.action as any).path : "/"), 700);
+      } else if (result.action?.type === "search") {
+        setTimeout(() => navigate(`/search?q=${encodeURIComponent((result.action as any).query)}`), 700);
+      } else if (result.action?.type === "external") {
+        window.open((result.action as any).url, "_blank", "noopener,noreferrer");
+      } else if (result.action?.type === "end_session") {
+        setTimeout(() => endLiveSession(), 1500);
       }
     },
-    [muted, navigate]
+    [muted, navigate, pushMessage, user, username]
   );
 
-  const startListening = useCallback(async () => {
+  // ---- Live session control ----
+  const startLiveSession = useCallback(async () => {
     if (!supported) {
       toast({
         variant: "destructive",
         title: "Voice not supported",
-        description:
-          "Your browser doesn't support voice input. Try Chrome, Edge, or Safari.",
+        description: "Try Chrome, Edge or Safari for live voice.",
       });
       return;
     }
     try {
-      // Prompt mic permission.
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
       toast({
@@ -86,76 +167,60 @@ export function SokoniAssistant() {
       });
       return;
     }
-
-    stopSpeaking();
-    const rec = getSpeechRecognition();
-    if (!rec) return;
-    recRef.current = rec;
-    rec.interimResults = true;
-
-    rec.onstart = () => setListening(true);
-    rec.onerror = (e: any) => {
-      setListening(false);
-      if (e?.error && e.error !== "no-speech" && e.error !== "aborted") {
-        toast({
-          variant: "destructive",
-          title: "Voice error",
-          description: e.error,
-        });
-      }
-    };
-    rec.onend = () => {
-      setListening(false);
-      setPartial("");
-    };
-    rec.onresult = (e: any) => {
-      let interim = "";
-      let final = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const transcript = e.results[i][0].transcript;
-        if (e.results[i].isFinal) final += transcript;
-        else interim += transcript;
-      }
-      if (interim) setPartial(interim);
-      if (final) {
+    if (sessionRef.current) sessionRef.current.stop();
+    const session = new LiveSpeechSession({
+      onPartial: (t) => setPartial(t),
+      onFinal: (t) => {
         setPartial("");
-        reply(final.trim());
-      }
-    };
-
-    try {
-      rec.start();
-    } catch {
-      // Already started; ignore.
-    }
+        if (t) reply(t);
+      },
+      onListeningChange: setListening,
+      onError: (err) => {
+        if (err && err !== "no-speech") {
+          toast({ variant: "destructive", title: "Voice error", description: err });
+        }
+      },
+    });
+    sessionRef.current = session;
+    session.start();
+    setLiveOn(true);
   }, [reply, supported]);
 
-  const stopListening = useCallback(() => {
-    recRef.current?.stop();
+  const endLiveSession = useCallback(() => {
+    sessionRef.current?.stop();
+    sessionRef.current = null;
+    setLiveOn(false);
     setListening(false);
+    setPartial("");
+    stopSpeaking();
+    if (userIdRef.current) endConversation(userIdRef.current);
   }, []);
 
-  const handleMicClick = () => {
-    if (listening) stopListening();
-    else startListening();
-  };
+  // Stop everything when panel closes
+  useEffect(() => {
+    if (!open) {
+      endLiveSession();
+    }
+  }, [open, endLiveSession]);
+
+  // Cleanup on unmount
+  useEffect(() => () => { sessionRef.current?.stop(); stopSpeaking(); }, []);
 
   const toggleMute = () => {
     if (!muted) stopSpeaking();
     setMuted((m) => !m);
   };
 
-  // Stop everything on close
-  useEffect(() => {
-    if (!open) {
-      stopListening();
-      stopSpeaking();
-    }
-  }, [open, stopListening]);
+  const handleClearHistory = () => {
+    if (user) clearHistory(user.id);
+    setMessages([]);
+    const ctx: AssistantContext = { username, isLoggedIn: !!user, walkthroughStep: 0 };
+    const w: StoredMsg = { id: crypto.randomUUID(), role: "assistant", text: welcomeMessage(ctx), ts: Date.now() };
+    setMessages([w]);
+  };
 
   return (
     <>
-      {/* Floating launcher */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
@@ -163,23 +228,21 @@ export function SokoniAssistant() {
           className={cn(
             "fixed bottom-6 right-6 z-[60] h-14 w-14 rounded-full",
             "bg-primary text-primary-foreground shadow-2xl",
-            "flex items-center justify-center",
-            "hover:scale-105 transition-transform",
+            "flex items-center justify-center hover:scale-105 transition-transform",
             "ring-4 ring-primary/20"
           )}
         >
           <Sparkles className="h-6 w-6" />
           <span className="sr-only">Sokoni Assistant</span>
-          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
+          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary-foreground ring-2 ring-background animate-pulse" />
         </button>
       )}
 
-      {/* Panel */}
       {open && (
         <div
           className={cn(
             "fixed bottom-6 right-6 z-[60] w-[min(380px,calc(100vw-2rem))]",
-            "h-[min(560px,calc(100vh-3rem))]",
+            "h-[min(620px,calc(100vh-3rem))]",
             "bg-background border border-border rounded-2xl shadow-2xl",
             "flex flex-col overflow-hidden"
           )}
@@ -189,43 +252,31 @@ export function SokoniAssistant() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-gradient-to-r from-primary/10 to-primary/5">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+              <div className="relative h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                 <Sparkles className="h-4 w-4" />
+                {liveOn && (
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary ring-2 ring-background animate-pulse" />
+                )}
               </div>
               <div>
-                <p className="font-semibold text-sm leading-tight">
-                  Sokoni Assistant
-                </p>
+                <p className="font-semibold text-sm leading-tight">Sokoni Assistant</p>
                 <p className="text-[11px] text-muted-foreground leading-tight">
-                  {listening
-                    ? "Listening…"
-                    : muted
-                    ? "Voice muted"
-                    : "Tap mic to talk"}
+                  {liveOn
+                    ? listening ? "Live • Listening…" : "Live • Paused"
+                    : muted ? "Voice muted" : "Tap the mic to start a live session"}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={toggleMute}
-                aria-label={muted ? "Unmute voice" : "Mute voice"}
-              >
-                {muted ? (
-                  <VolumeX className="h-4 w-4" />
-                ) : (
-                  <Volume2 className="h-4 w-4" />
-                )}
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleMute} aria-label={muted ? "Unmute voice" : "Mute voice"}>
+                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setOpen(false)}
-                aria-label="Close assistant"
-              >
+              {user && (
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleClearHistory} aria-label="Clear conversation">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpen(false)} aria-label="Close assistant">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -233,26 +284,7 @@ export function SokoniAssistant() {
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={cn(
-                  "flex",
-                  m.role === "user" ? "justify-end" : "justify-start"
-                )}
-              >
-                <div
-                  className={cn(
-                    "max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed",
-                    m.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-muted text-foreground rounded-bl-sm"
-                  )}
-                >
-                  {m.text}
-                </div>
-              </div>
-            ))}
+            {messages.map((m) => <AssistantMessage key={m.id} m={m} />)}
             {partial && (
               <div className="flex justify-end">
                 <div className="max-w-[85%] rounded-2xl rounded-br-sm px-3 py-2 text-sm bg-primary/40 text-primary-foreground italic">
@@ -264,12 +296,7 @@ export function SokoniAssistant() {
 
           {/* Quick prompts */}
           <div className="px-3 py-2 border-t flex gap-2 overflow-x-auto">
-            {[
-              "Open shops",
-              "Find iPhones",
-              "How do I post an ad?",
-              "Take me to my dashboard",
-            ].map((q) => (
+            {QUICK_PROMPTS.map((q) => (
               <button
                 key={q}
                 onClick={() => reply(q)}
@@ -280,28 +307,47 @@ export function SokoniAssistant() {
             ))}
           </div>
 
-          {/* Mic */}
+          {/* Mic / Live control */}
           <div className="p-4 border-t flex items-center justify-center gap-3">
-            <button
-              onClick={handleMicClick}
-              aria-label={listening ? "Stop listening" : "Start listening"}
-              className={cn(
-                "h-14 w-14 rounded-full flex items-center justify-center transition-all",
-                listening
-                  ? "bg-destructive text-destructive-foreground animate-pulse ring-4 ring-destructive/30"
-                  : "bg-primary text-primary-foreground hover:scale-105 ring-4 ring-primary/20"
-              )}
-            >
-              {listening ? (
-                <MicOff className="h-6 w-6" />
-              ) : (
-                <Mic className="h-6 w-6" />
-              )}
-            </button>
+            {!liveOn ? (
+              <button
+                onClick={startLiveSession}
+                aria-label="Start live voice session"
+                className={cn(
+                  "h-14 px-6 rounded-full flex items-center gap-2 transition-all",
+                  "bg-primary text-primary-foreground hover:scale-105 ring-4 ring-primary/20"
+                )}
+              >
+                <Mic className="h-5 w-5" />
+                <span className="text-sm font-medium">Start live session</span>
+              </button>
+            ) : (
+              <>
+                <div className={cn(
+                  "h-14 w-14 rounded-full flex items-center justify-center",
+                  listening ? "bg-primary/15 ring-4 ring-primary/30" : "bg-muted ring-4 ring-muted-foreground/10"
+                )}>
+                  {listening ? (
+                    <Mic className="h-6 w-6 text-primary" />
+                  ) : (
+                    <MicOff className="h-6 w-6 text-muted-foreground" />
+                  )}
+                </div>
+                <button
+                  onClick={endLiveSession}
+                  aria-label="End session"
+                  className="h-12 px-5 rounded-full bg-destructive text-destructive-foreground flex items-center gap-2 hover:scale-105 transition-transform"
+                >
+                  <PhoneOff className="h-4 w-4" />
+                  <span className="text-sm font-medium">End session</span>
+                </button>
+              </>
+            )}
           </div>
+
           {!supported && (
             <p className="px-4 pb-3 text-[11px] text-center text-muted-foreground">
-              Voice input isn't supported in this browser. Use Chrome, Edge, or Safari.
+              Voice input isn't supported in this browser. Use Chrome, Edge or Safari.
             </p>
           )}
         </div>
