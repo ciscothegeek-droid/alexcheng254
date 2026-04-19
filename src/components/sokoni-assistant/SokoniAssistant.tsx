@@ -255,7 +255,7 @@ export function SokoniAssistant() {
               <div className="relative h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                 <Sparkles className="h-4 w-4" />
                 {liveOn && (
-                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-background animate-pulse" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-primary ring-2 ring-background animate-pulse" />
                 )}
               </div>
               <div>
@@ -325,10 +325,10 @@ export function SokoniAssistant() {
               <>
                 <div className={cn(
                   "h-14 w-14 rounded-full flex items-center justify-center",
-                  listening ? "bg-emerald-500/15 ring-4 ring-emerald-500/30" : "bg-muted ring-4 ring-muted-foreground/10"
+                  listening ? "bg-primary/15 ring-4 ring-primary/30" : "bg-muted ring-4 ring-muted-foreground/10"
                 )}>
                   {listening ? (
-                    <Mic className="h-6 w-6 text-emerald-600" />
+                    <Mic className="h-6 w-6 text-primary" />
                   ) : (
                     <MicOff className="h-6 w-6 text-muted-foreground" />
                   )}
