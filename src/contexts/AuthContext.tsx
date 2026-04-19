@@ -11,6 +11,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, username: string, phone: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,10 +44,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Handle token refresh failures - force sign out so user re-authenticates
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          setUser(null);
+          setSession(null);
+          setIsAdmin(false);
+          setIsLoading(false);
+          toast({
+            title: "Session expired",
+            description: "Please sign in again to continue.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
-        
+
         // Defer admin check to prevent deadlock
         if (session?.user) {
           setTimeout(() => {
@@ -57,12 +73,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // THEN check for existing session - with refresh-failure recovery
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session restore error:', error);
+        supabase.auth.signOut();
+        setIsLoading(false);
+        return;
+      }
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
-      
+
       if (session?.user) {
         checkAdminRole(session.user.id);
       }
@@ -70,6 +92,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
 
   const signUp = async (email: string, password: string, username: string, phone: string) => {
     try {
@@ -131,6 +174,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signIn,
         signOut,
+        resetPassword,
+        updatePassword,
       }}
     >
       {children}
