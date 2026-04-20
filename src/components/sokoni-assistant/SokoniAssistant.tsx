@@ -213,8 +213,7 @@ export function SokoniAssistant() {
   const handleClearHistory = () => {
     if (user) clearHistory(user.id);
     setMessages([]);
-    const ctx: AssistantContext = { username, isLoggedIn: !!user, walkthroughStep: 0 };
-    const w: StoredMsg = { id: crypto.randomUUID(), role: "assistant", text: welcomeMessage(ctx), ts: Date.now() };
+    const w: StoredMsg = { id: crypto.randomUUID(), role: "assistant", text: welcomeMessage({ username, isLoggedIn: !!user }), ts: Date.now() };
     setMessages([w]);
   };
 
