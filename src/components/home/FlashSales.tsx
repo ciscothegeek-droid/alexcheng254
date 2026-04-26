@@ -1,10 +1,8 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Zap, ArrowRight } from "lucide-react";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ListingCard } from "@/components/listings/ListingCard";
 import { supabase } from "@/integrations/supabase/untyped-client";
 import { parseImages } from "@/lib/utils";
 import { useSellerContacts } from "@/hooks/useSellerContacts";
