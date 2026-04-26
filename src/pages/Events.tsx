@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { parseImages } from "@/lib/utils";
+
 import { Layout } from "@/components/layout/Layout";
 import { ListingsGridWithContacts } from "@/components/listings/ListingsGridWithContacts";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Search, SlidersHorizontal, Loader2, Sparkles } from "lucide-react";
 import "@/styles/featured-shops.css";
 import { useListings } from "@/hooks/useListings";
 import categoryEvents from "@/assets/category-events.png";
-import { format } from "date-fns";
+
 
 const categories = [
   "All Events",
