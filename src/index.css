@@ -276,10 +276,10 @@
     @apply bg-muted text-muted-foreground;
   }
 
-  /* Grid Layouts */
+  /* Grid Layouts — 3 cols on mobile, more on larger screens */
   .listing-grid {
-    @apply grid gap-4;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    @apply grid gap-2 sm:gap-3 md:gap-4;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   @media (min-width: 640px) {
