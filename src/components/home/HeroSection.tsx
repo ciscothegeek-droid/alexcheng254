@@ -4,6 +4,7 @@ import {
   ChevronRight, Smartphone, Cpu, Shirt, Home, Sparkles,
   Monitor, Dumbbell, Car, ShoppingBasket, Baby, Grid3x3,
   Percent, Store, Headphones, ArrowRight,
+  ShieldCheck, Truck, RotateCcw, Star, Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image";
