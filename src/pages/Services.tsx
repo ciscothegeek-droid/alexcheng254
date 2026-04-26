@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { parseImages } from "@/lib/utils";
 import { Layout } from "@/components/layout/Layout";
-import { ListingCard } from "@/components/listings/ListingCard";
+import { ListingsGridWithContacts } from "@/components/listings/ListingsGridWithContacts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
