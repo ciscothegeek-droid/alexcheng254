@@ -41,11 +41,13 @@ export default function Services() {
     }
   }, [categoryFromUrl]);
 
+  const [pageSeed] = useState(() => Math.random());
   const { listings, isLoading, error } = useListings({
     type: "service",
     category: selectedCategory,
     searchQuery,
     sortBy,
+    shuffleSeed: sortBy === "newest" ? pageSeed : undefined,
   });
 
   return (
