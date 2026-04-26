@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { HeroSection } from "@/components/home/HeroSection";
 import { CategorySection } from "@/components/home/CategorySection";
 import { ShopNamesBar } from "@/components/home/ShopNamesBar";
+import { FlashSales } from "@/components/home/FlashSales";
 import { FeaturedListings } from "@/components/home/FeaturedListings";
 import { PremiumShops } from "@/components/home/PremiumShops";
 import { FeaturedShops } from "@/components/home/FeaturedShops";
@@ -14,6 +15,7 @@ const Index = () => {
       <HeroSection />
       <CategorySection />
       <ShopNamesBar />
+      <FlashSales />
       <PremiumShops />
       <FeaturedListings />
       <FeaturedShops />
